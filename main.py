@@ -1,25 +1,41 @@
 from PIL import Image, ImageTk
 import numpy as np
 import os
+from sklearn import model_selection
+
+# Receive a image and return n*log(image)
+def applyLogScale(fft, n = 10):
+    magnitude_spectrum = n*np.log(np.abs(fft))
+    return magnitude_spectrum
 
 
-
+# Apply FFT to an image and shifting the zero-frequency component to the center.
 def getFFT(url):
     a = Image.open(url)
-    # a = Image.open("./orl_faces/s1/1.pgm")
     arr = np.array(a)
     fourizado = np.fft.fft2(arr)
-    fshift = np.fft.fftshift(fourizado.real)
-    magnitude_spectrum = 15*np.log(np.abs(fshift))
-    magnitude_spectrum = np.round(magnitude_spectrum)
-    return Image.fromarray(magnitude_spectrum.astype(int))
+    fshift = np.fft.fftshift(fourizado)
+    return fshift
 
-a = getFFT("./orl_faces/s1/1.pgm")
-a.show()
+# Initing data
+X = []
+Y = []
 
-# images = []
-# for folder in os.listdir("./orl_faces"):
-#     current = []
-#     for img in os.listdir(f"./orl_faces/{folder}"):
-#         current.append(getFFT(f"./orl_faces/{folder}/{img}"))
-#     images.append(current)
+# Populating data with images
+for folder in os.listdir("./orl_faces"):
+    current = []
+    for img in os.listdir(f"./orl_faces/{folder}"):
+        # Getting the fft from images and changing the scale to log.
+        current.append(applyLogScale(getFFT(f"./orl_faces/{folder}/{img}")))
+    X.append(current)
+    # Removing 's' from folder and transforming to int
+    Y.append(int(folder[1::]))
+
+# Transforming from list to np.array
+X = np.array(X)
+Y = np.array(Y)
+
+# Applying LeaveOneOut is like KFold where k = n.
+loo = model_selection.LeaveOneOut()
+for idxTrain, idxTest in loo.split(X):
+    print("%s %s" % (X[idxTrain], X[idxTest]))
