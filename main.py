@@ -10,7 +10,6 @@ def applyLogScale(fft, n = 10):
     magnitude_spectrum = n*np.log(np.abs(fft))
     return magnitude_spectrum
 
-
 # Apply FFT to an image and shifting the zero-frequency component to the center.
 def getFFT(url):
     a = Image.open(url)
@@ -18,6 +17,25 @@ def getFFT(url):
     fourizado = np.fft.fft2(arr)
     fshift = np.fft.fftshift(fourizado)
     return fshift
+
+def getSubRegion(image, newHeight, newWidth):
+    width, height = image.size
+    left = (width - newWidth)//2
+    right = (width + newWidth)//2
+    top = (height - newHeight)//2
+    bottom = (height + newHeight)//2
+
+    return image.crop((left,top,right,bottom))
+
+def getCropedImages(images, size):
+    allImages = []
+
+    for image in images:
+        a = Image.fromarray(image.astype(np.int32))
+        allImages.append(getSubRegion(a,size,size))
+
+    return allImages
+            
 
 # Initing data
 X = []
@@ -75,3 +93,13 @@ print(set(y_test) - set(y_pred))
 print(accuracy_score(y_test, y_pred))
 print(classification_report(y_test, y_pred, zero_division=0))
 print(confusion_matrix(y_test, y_pred))
+Y = np.array(Y)
+
+# Exemplo de como rodar o subregion
+# croped = []
+# for images in X:
+#     croped = getCropedImages(images, 2)
+
+# print(len(croped))
+
+
