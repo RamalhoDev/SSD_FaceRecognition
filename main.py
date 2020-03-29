@@ -56,8 +56,7 @@ X = np.array(X)
 y = np.array(y)
 size = 112*92
 X = X.reshape((40,10,size))
-# Applying LeaveOneOut is like KFold where k = n.
-loo = model_selection.LeaveOneOut()
+
 # Creating KNN Object
 knn = KNeighborsClassifier(n_neighbors=1, weights='uniform', algorithm='auto', n_jobs=2)
 
@@ -67,17 +66,21 @@ Xs_test = np.ndarray(((X.shape)[0], 1, size))
 ys_train = np.ndarray(((X.shape)[0], 9))
 ys_test = np.ndarray(((X.shape)[0], 1))
 
-
 # Applying kfold for every folder
 for i in (range((X.shape)[0])):
-    for idxsTrain, idxTest in loo.split(X[i]):
-        X_train, X_test, y_train, y_test = X[i][idxsTrain], X[i][idxTest], np.repeat(y[i], 9), np.array(y[i])
-        Xs_train[i] = X_train
-        Xs_test[i] = X_test
-        ys_train[i] = y_train
-        ys_test[i] = y_test
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X[i], np.repeat(y[i], 10), test_size=0.1)
+    Xs_train[i] = X_train
+    Xs_test[i] = X_test
+    ys_train[i] = y_train
+    ys_test[i] = y_test
+    # for idxsTrain, idxTest in loo.split(X[i]):
+        # X_train, X_test, y_train, y_test = X[i][idxsTrain], X[i][idxTest], np.repeat(y[i], 9), np.array(y[i])
+        # Xs_train[i] = X_train
+        # Xs_test[i] = X_test
+        # ys_train[i] = y_train
+        # ys_test[i] = y_test
 
-# Reshaping data to make easy training and testing
+# Reshaping data to make easy when training and testing
 X_train, X_test, y_train, y_test = Xs_train.reshape((40*9, size)), Xs_test.reshape((40, size)), ys_train.reshape((40*9)) ,ys_test.reshape((40))
 
 # Training
@@ -93,7 +96,6 @@ print(set(y_test) - set(y_pred))
 print(accuracy_score(y_test, y_pred))
 print(classification_report(y_test, y_pred, zero_division=0))
 print(confusion_matrix(y_test, y_pred))
-Y = np.array(Y)
 
 # Exemplo de como rodar o subregion
 # croped = []
