@@ -6,33 +6,27 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score,classification_report,confusion_matrix
 from tqdm import tqdm
 
-def getSubRegion(image, newHeight, newWidth):
-    width, height = image.size
-    left = (width - newWidth)//2
-    right = (width + newWidth)//2
-    top = (height - newHeight)//2
-    bottom = (height + newHeight)//2
 
-    return image.crop((left,top,right,bottom))
+def isOdd(n):
+    if n % 2 != 0:
+        return -1
+    return 0 
+
+def crop(array, newSize):
+    centerX = 112//2
+    centerY = 92//2
+
+    pos = newSize//2
+    return array[centerX-pos+isOdd(newSize) : centerX+pos, centerY-pos+isOdd(newSize) : centerY+pos]
 
 # Apply FFT to an image and shifting the zero-frequency component to the center.
 def getFFT(url, side):
     a = Image.open(url)
-    arr = np.array(getSubRegion(a, side, side))
+    arr = np.array(a)
     fourizado = np.fft.fft2(arr)
     fshift = np.fft.fftshift(fourizado)
-    return fshift
-
-def getCroppedImages(images, size):
-    allImagesArray = []
-
-    for image in images:
-        a = Image.fromarray(image)
-        allImagesArray.append(np.array(getSubRegion(a,size,size)))
-
-    return allImagesArray
+    return crop(fshift, side)
             
-
 # Initing data
 original_X = []
 original_y = []
@@ -52,7 +46,6 @@ best_mean = 0
 score = 0
 local_score = []
 size = side*side
-
 for time in tqdm(range(0, 10), desc=f"RUN"):
     # Transforming from list to np.array
     X = np.array(original_X)
@@ -60,13 +53,16 @@ for time in tqdm(range(0, 10), desc=f"RUN"):
     X = X.reshape((40,10,size))
 
     # Creating KNN Object
-    knn = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean', weights='uniform', algorithm='auto', n_jobs=2)
-
+    # knn = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    knnReal = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean', algorithm='auto', n_jobs=2)
+    # knnImag = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    # knnRealImag = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    # knnImagReal = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
     # Creating ndarray used to store training and testing data
     Xs_train = np.ndarray(((X.shape)[0], 9, size), dtype=complex)
     Xs_test = np.ndarray(((X.shape)[0], 1, size), dtype=complex)
-    ys_train = np.ndarray(((X.shape)[0], 9), dtype=complex)
-    ys_test = np.ndarray(((X.shape)[0], 1), dtype=complex)
+    ys_train = np.ndarray(((X.shape)[0], 9))
+    ys_test = np.ndarray(((X.shape)[0], 1))
 
     # Applying kfold for every folder
     for i in (range((X.shape)[0])):
@@ -86,21 +82,32 @@ for time in tqdm(range(0, 10), desc=f"RUN"):
 
 
     # Training
-    print(X_train.real, "\n", X_train.imag)
-    input()
-    knn.fit(X_train, y_train)
+    # knn.fit(X_train.imag + X_train.real, y_train.real)
+
+    knnReal.fit(X_train.real, y_train.real)
+    # knnImag.fit(X_train.imag, y_train.real)
+    # knnRealImag.fit(X_train.real, y_train.real)
+    # knnImagReal.fit(X_train.imag, y_train.real)
 
     # Predicting used to get scores
-    y_pred = knn.predict(X_test)
+    # y_pred = knn.predict(X_test.imag + X_test.real)
+    y_predReal = knnReal.predict(X_test.imag + X_test.real)
+    # y_predImag = knnImag.predict(X_test.imag + X_test.real)
+    # y_predRealImag = knnRealImag.predict(X_test.imag + X_test.real)
+    # y_predImagReal = knnImagReal.predict(X_test.imag + X_test.real)
 
     # Labels not used in prediction
     # print(set(y_test) - set(y_pred))
-    score = accuracy_score(y_test, y_pred)
+    # score = accuracy_score(y_test.real, y_pred)
+    scoreReal = accuracy_score(y_test.real, y_predReal)
+    # scoreImag = accuracy_score(y_test.imag, y_predImag)
+    # scoreRealImag = accuracy_score(y_test.imag, y_predRealImag)
+    # scoreImagReal = accuracy_score(y_test.real, y_predImagReal)
+    local_score.append(scoreReal)
     # Scores
     # print(accuracy_score(y_test, y_pred))
     # print(classification_report(y_test, y_pred, zero_division=0))
     # print(confusion_matrix(y_test, y_pred))
-    local_score.append(score)
 scores = np.array(local_score)
 print(scores)
 print(scores.mean())
