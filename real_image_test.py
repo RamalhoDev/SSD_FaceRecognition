@@ -53,11 +53,14 @@ for time in tqdm(range(0, 10), desc=f"RUN"):
     X = X.reshape((40,10,size))
 
     # Creating KNN Object
-    # knn = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
-    knnReal = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean', algorithm='auto', n_jobs=2)
+    knn = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    # knnSum = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    # knnMerge = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+    # knnReal = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean', algorithm='auto', n_jobs=2)
     # knnImag = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
     # knnRealImag = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
     # knnImagReal = KNeighborsClassifier(n_neighbors=1, metric = 'euclidean')
+
     # Creating ndarray used to store training and testing data
     Xs_train = np.ndarray(((X.shape)[0], 9, size), dtype=complex)
     Xs_test = np.ndarray(((X.shape)[0], 1, size), dtype=complex)
@@ -82,28 +85,35 @@ for time in tqdm(range(0, 10), desc=f"RUN"):
 
 
     # Training
-    # knn.fit(X_train.imag + X_train.real, y_train.real)
-
-    knnReal.fit(X_train.real, y_train.real)
+    knn.fit(X_train.real, y_train.real)
+    # knnSum.fit(X_train.real + X_train.imag, y_train.real)
+    # knnMerge.fit(abs(X_train), y_train.real)
+    # knnReal.fit(X_train.real, y_train.real)
     # knnImag.fit(X_train.imag, y_train.real)
     # knnRealImag.fit(X_train.real, y_train.real)
     # knnImagReal.fit(X_train.imag, y_train.real)
 
     # Predicting used to get scores
-    # y_pred = knn.predict(X_test.imag + X_test.real)
-    y_predReal = knnReal.predict(X_test.imag + X_test.real)
-    # y_predImag = knnImag.predict(X_test.imag + X_test.real)
-    # y_predRealImag = knnRealImag.predict(X_test.imag + X_test.real)
-    # y_predImagReal = knnImagReal.predict(X_test.imag + X_test.real)
+    y_pred = knn.predict(X_test.real)
+    # y_predMerge = knn.predict(abs(X_test))
+    # y_predSum = knn.predict(X_test.real+X_test.imag)
+    # y_predReal = knnReal.predict(X_test.real)
+    # y_predImag = knnImag.predict(X_test.imag)
+    # y_predRealImag = knnRealImag.predict(X_test.imag)
+    # y_predImagReal = knnImagReal.predict(X_test.real)
 
     # Labels not used in prediction
     # print(set(y_test) - set(y_pred))
-    # score = accuracy_score(y_test.real, y_pred)
-    scoreReal = accuracy_score(y_test.real, y_predReal)
-    # scoreImag = accuracy_score(y_test.imag, y_predImag)
-    # scoreRealImag = accuracy_score(y_test.imag, y_predRealImag)
-    # scoreImagReal = accuracy_score(y_test.real, y_predImagReal)
-    local_score.append(scoreReal)
+    score = accuracy_score(y_test, y_pred)
+    # scoreSum = accuracy_score(y_test, y_predMerge)
+    # scoreMerge = accuracy_score(y_test, y_predMerge)
+    # scoreReal = accuracy_score(y_test, y_predReal)
+    # scoreImag = accuracy_score(y_test, y_predImag) 
+    # scoreRealImag = accuracy_score(y_test, y_predRealImag)
+    # scoreImagReal = accuracy_score(y_test, y_predImagReal)
+
+
+    local_score.append(score)
     # Scores
     # print(accuracy_score(y_test, y_pred))
     # print(classification_report(y_test, y_pred, zero_division=0))
