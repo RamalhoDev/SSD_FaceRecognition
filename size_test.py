@@ -1,3 +1,4 @@
+
 from PIL import Image, ImageTk
 import numpy as np
 import os
@@ -13,7 +14,7 @@ def applyLogScale(fft, n = 10):
 # Apply FFT to an image and shifting the zero-frequency component to the center.
 def getFFT(url):
     a = Image.open(url)
-    arr = np.array(getSubRegion(a,size,size))
+    arr = np.array(a)
     fourizado = np.fft.fft2(arr)
     fshift = np.fft.fftshift(fourizado)
     return fshift
@@ -25,17 +26,15 @@ def getSubRegion(image, newHeight, newWidth):
     top = (height - newHeight)//2
     bottom = (height + newHeight)//2
 
-    return image.crop((left,top,right,bottom))
+    return np.array(image.crop((left,top,right,bottom)))
 
 def getCroppedImages(images, size):
-    allImagesArray = []
+    allImages = []
 
     for image in images:
-        a = Image.fromarray(image.astype(np.int32))
-        allImagesArray.append(np.array())
-
-    return allImagesArray
-            
+        a = Image.fromarray(image.real)
+        allImages.append(getSubRegion(a,size,size))
+    return allImages
 
 # Initing data
 original_X = []
@@ -46,7 +45,7 @@ for folder in (os.listdir("./orl_faces")):
     current =[]
     for img in os.listdir(f"./orl_faces/{folder}"):
         # Getting the fft from images and changing the scale to log.
-        current.append(applyLogScale(getFFT(f"./orl_faces/{folder}/{img}")))
+        current.append(getFFT(f"./orl_faces/{folder}/{img}"))
         # Removing 's' from folder and transforming to int
     original_X.append(current)
     original_y.append(int(folder[1::]))
@@ -60,7 +59,8 @@ for side in tqdm(range(1, 51), desc="SIDE"):
         size = side*side
         cropped = []
         for images in original_X:
-            ar = np.array(getCroppedImages(images, side))
+            lista = getCroppedImages(images, side)
+            ar = np.array(lista)
             cropped.append(ar)
 
         # Transforming from list to np.array
